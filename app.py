@@ -5,11 +5,24 @@ from authlib.integrations.flask_client import OAuth
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from google import genai
-from textblob import TextBlob
-import language_tool_python
-import fitz
+try:
+    from textblob import TextBlob
+except:
+    TextBlob = None
+try:
+    import language_tool_python
+    tool = language_tool_python.LanguageTool('en-US')
+except:
+    tool = None
+try:
+    import fitz
+except:
+    fitz = None
 import re
-import textstat
+try:
+    import textstat
+except:
+    textstat = None
 import time
 import difflib
 import sqlite3
@@ -29,8 +42,6 @@ google = oauth.register(
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     client_kwargs={'scope': 'openid email profile'}
 )
-
-tool = language_tool_python.LanguageTool('en-US')
 
 def init_db():
     conn = sqlite3.connect("database.db")
@@ -79,12 +90,13 @@ def init_db():
 
 def grammar_spell_check(text):
 
-    # Spell correction
-    blob = TextBlob(text)
-    corrected_text = str(blob.correct())
+    if TextBlob:
+        blob = TextBlob(text)
+        corrected_text = str(blob.correct())
+    else:
+        corrected_text = text
 
-    # Grammar check
-    matches = tool.check(text)
+    matches = tool.check(text) if tool else []
 
     errors = []
     for match in matches:
@@ -113,6 +125,8 @@ def extract_text(file):
         return file.read().decode("utf-8", errors="ignore")
 
     elif filename.endswith(".pdf"):
+        if not fitz:
+            return ""
         pdf = fitz.open(stream=file.read(), filetype="pdf")
         text = ""
         for page in pdf:
@@ -154,7 +168,7 @@ def evaluate_essay(text):
     words = text.split()
     word_count = len(words)
 
-    readability_score = textstat.flesch_reading_ease(text)
+    readability_score = textstat.flesch_reading_ease(text) if textstat else 50
 
     if readability_score > 60:
         readability = "Easy"
@@ -229,7 +243,7 @@ def evaluate_essay(text):
     }
 
 def grammar_score(text):
-    matches = tool.check(text)
+    matches = tool.check(text) if tool else [] 
     errors = len(matches)
 
     if errors < 5:

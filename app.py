@@ -532,7 +532,7 @@ def save_settings():
 
 
 if __name__ == '__main__':
-     try:
+    try:
         init_db()
     except:
         pass

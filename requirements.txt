@@ -1,9 +1,11 @@
 Flask
 gunicorn
-numpy
-scikit-learn
-nltk
-textblob
-requests
-python-dotenv
 Authlib
+scikit-learn
+numpy
+google-generativeai
+textblob
+language-tool-python
+PyMuPDF
+textstat
+python-dotenv

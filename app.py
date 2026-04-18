@@ -465,32 +465,34 @@ def essay_evaluate():
 
 
 def get_ai_feedback(text):
-    for i in range(3):   # try 3 times
-        try:
-            model = genai.GenerativeModel("gemini-1.5-flash")
+    try:
+        api_key = os.getenv("GOOGLE_API_KEY")
 
-            response = model.generate_content(
-                f"""
-                Analyze this essay and give:
-                - Grammar feedback
-                - Suggestions
-                - Improvements
+        if not api_key:
+            return "API key missing"
 
-                Essay:
-                {text}
-                """,
-                request_options={"timeout": 10}
-            )
+        genai.configure(api_key=api_key)
 
-            return response.text
+        model = genai.GenerativeModel("gemini-1.5-flash")
 
-        except Exception as e:
-            print("Retrying AI feedback...", e)
-            time.sleep(2)
+        response = model.generate_content(
+            f"""
+            Analyze this essay and give:
+            - Grammar feedback
+            - Suggestions
+            - Improvements
 
-    # FINAL fallback
-    return "AI feedback not available right now."
+            Essay:
+            {text}
+            """,
+            request_options={"timeout": 10}
+        )
 
+        return response.text if response.text else "No response from AI"
+
+    except Exception as e:
+        print("GENAI ERROR:", e)
+        return "AI not working right now"
     
 def rewrite_essay(text):
     for i in range(3):   # try 3 times

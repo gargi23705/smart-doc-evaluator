@@ -1,0 +1,12 @@
+flask
+authlib
+python-dotenv
+requests
+scikit-learn
+numpy
+scipy
+joblib
+threadpoolctl
+google-genai
+PyMuPDF
+gunicorn

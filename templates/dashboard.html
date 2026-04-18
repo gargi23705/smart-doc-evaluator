@@ -1,0 +1,513 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body id="body" class="flex bg-gray-50 text-gray-900">
+    <!-- SIDEBAR -->
+    <div
+      id="sidebar"
+      class="w-64 h-screen bg-white shadow-lg p-4 text-gray-900"
+    >
+      <h2 class="text-xl font-bold mb-6">Smart Doc</h2>
+
+      <ul class="space-y-4">
+        <li
+          onclick="showSection('dashboard')"
+          class="cursor-pointer hover:text-blue-600"
+        >
+          Dashboard
+        </li>
+
+        <li
+          onclick="showSection('documents')"
+          class="cursor-pointer hover:text-blue-600"
+        >
+          My Documents
+        </li>
+
+        <li
+          onclick="showSection('analytics')"
+          class="cursor-pointer hover:text-blue-600"
+        >
+          Analytics
+        </li>
+
+        <li class="cursor-pointer hover:text-blue-600 relative">
+          <div onclick="toggleSettings(event)">Settings</div>
+
+          <div
+            id="settingsMenu"
+            class="hidden absolute left-0 mt-2 w-48 bg-white shadow-lg rounded p-2 z-50 text-gray-900"
+            style="color: #111827"
+          >
+            <div
+              onclick="openAppearance()"
+              class="p-2 hover:bg-gray-100 cursor-pointer"
+            >
+              Appearance
+            </div>
+
+            <div
+              onclick="openHelp()"
+              class="p-2 hover:bg-gray-100 cursor-pointer"
+            >
+              Help
+            </div>
+
+            <div class="p-2 hover:bg-gray-100 cursor-pointer relative group">
+              Profile
+
+              <div
+                class="hidden group-hover:block absolute left-full top-0 ml-2 w-60 bg-white shadow-lg rounded p-3"
+              >
+                <p class="font-semibold">{{ session.user.name }}</p>
+                <p class="text-sm text-gray-500">{{ session.user.email }}</p>
+
+                <a
+                  href="/logout"
+                  class="block mt-3 bg-gray-200 px-3 py-1 rounded text-center"
+                >
+                  Logout
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- MAIN -->
+    <div class="flex-1 p-6">
+      <!-- DASHBOARD -->
+      <div id="dashboardSection">
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-2xl font-bold">Dashboard</h1>
+        </div>
+
+        <!-- TABS -->
+        <div class="flex mb-4">
+          <button
+            onclick="switchTab('similarity')"
+            id="tab1"
+            class="flex-1 p-3 rounded-l text-white bg-blue-500"
+          >
+            Similarity Check
+          </button>
+
+          <button
+            onclick="switchTab('essay')"
+            id="tab2"
+            class="flex-1 p-3 rounded-r bg-gray-200"
+          >
+            Essay Evaluation
+          </button>
+        </div>
+
+        <!-- FORM -->
+        <div id="similaritySection">
+          <form action="/upload" method="POST" enctype="multipart/form-data">
+            <div
+              class="border-2 border-dashed p-10 text-center rounded-xl mb-4"
+            >
+              <p class="mb-4 text-gray-500">
+                Upload 2 TXT files for similarity check
+              </p>
+
+              <input type="file" name="file1" required class="mb-2" /><br />
+              <input type="file" name="file2" required class="mb-4" /><br />
+
+              <button
+                class="accent-btn px-6 py-2 rounded text-white bg-blue-600"
+              >
+                Analyze Document
+              </button>
+            </div>
+          </form>
+
+          {% if result %}
+          <div class="mt-6 bg-white p-6 rounded-xl shadow">
+            <h2 class="text-xl font-bold mb-4">Result</h2>
+
+            <div class="border rounded-lg p-4 bg-gray-50 text-gray-900">
+              <p class="text-lg font-semibold text-blue-600 mb-2">
+                Similarity: {{ result }}%
+              </p>
+
+              <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="bg-white p-3 rounded border h-48 overflow-y-scroll">
+                  <h3 class="font-bold mb-2">Document 1</h3>
+                  <p>
+                    {% for word in text1.split() %} {% if word in text2 %}
+                    <span class="bg-yellow-300">{{ word }}</span>
+                    {% else %} {{ word }} {% endif %} {% endfor %}
+                  </p>
+                </div>
+
+                <div class="bg-white p-3 rounded border h-48 overflow-y-scroll">
+                  <h3 class="font-bold mb-2">Document 2</h3>
+                  <p>
+                    {% for word in text2.split() %} {% if word in text1 %}
+                    <span class="bg-yellow-300">{{ word }}</span>
+                    {% else %} {{ word }} {% endif %} {% endfor %}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ESSAY SECTION (NEW) -->
+      <div id="essaySection">
+        <!-- SUB NAVBAR -->
+        <div class="relative flex bg-gray-200 rounded-lg mb-6">
+          <div
+            id="slider"
+            class="absolute top-0 left-0 w-1/2 h-full bg-blue-500 rounded-lg transition-all duration-300"
+          ></div>
+
+          <button
+            onclick="switchEssayTab('upload')"
+            class="w-1/2 p-3 z-10 font-semibold"
+          >
+            Upload PDF
+          </button>
+
+          <button
+            onclick="switchEssayTab('text')"
+            class="w-1/2 p-3 z-10 font-semibold"
+          >
+            Text Input
+          </button>
+        </div>
+
+        <!-- UPLOAD -->
+        <div id="essayUpload">
+          <form
+            action="/essay-evaluate"
+            method="POST"
+            enctype="multipart/form-data"
+          >
+            <input type="file" name="essay_file" required class="mb-4" />
+
+            <button class="bg-blue-600 text-white px-6 py-2 rounded">
+              Evaluate Essay
+            </button>
+          </form>
+
+          <div class="mt-6 bg-white p-6 rounded-xl shadow">
+            <h2 class="text-xl font-bold mb-4">Essay Evaluation Result</h2>
+
+            <div class="border rounded-lg p-4 bg-gray-50 text-gray-900">
+              <p class="text-lg font-semibold text-blue-600 mb-2">
+                Score: {{essay_result.score }}/100
+              </p>
+
+              <p>Word Count: {{ essay_result.word_count }}</p>
+              <p>Readability: {{ essay_result.readability }}</p>
+
+              <div class="mt-3">
+                <h3 class="font-semibold">Suggestions:</h3>
+                <ul class="list-disc ml-5">
+                  {% for tip in essay_result.suggestions %}
+                  <li>{{ tip }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TEXT -->
+        <div id="essayText" class="hidden">
+          <form action="/essay-evaluate" method="POST">
+            <textarea
+              name="essay_text"
+              class="w-full border p-3 rounded text-gray-900"
+              rows="10"
+            >
+            {{ essay_text if essay_text else '' }}</textarea
+            >
+
+            <button class="bg-blue-600 text-white px-6 py-2 rounded">
+              Evaluate Essay
+            </button>
+          </form>
+
+          {% if essay_result %}
+          <div class="mt-6 bg-white p-6 rounded-xl shadow">
+            <div class="border rounded-lg p-4 bg-gray-50">
+              <p
+                class="text-lg font-semibold {% if essay_result.score > 75 %}text-green-600 {% elif essay_result.score > 50 %}text-yellow-600 {% else %}text-red-600 {% endif %}"
+              >
+                Score: {{ essay_result.score }}/100
+              </p>
+
+              <p>Word Count: {{ essay_result.word_count }}</p>
+              <p>Readability: {{ essay_result.readability }}</p>
+
+              <div class="mt-3">
+                <h3 class="font-semibold">Suggestions:</h3>
+                <ul class="list-disc ml-5">
+                  {% for tip in essay_result.suggestions %}
+                  <li>{{ tip }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+
+            {% if ai_feedback %}
+
+            <div class="mt-4 border rounded-lg p-4 bg-blue-50">
+              <h3 class="font-bold mb-3 text-blue-700">AI Feedback</h3>
+
+              <ul class="list-disc ml-5 space-y-2">
+                {% for line in ai_feedback.split('\n') %}
+                <li class="text-gray-800">{{ line }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+
+            {% endif %} {% if improved_essay %}
+
+            <div class="mt-4 border rounded-lg p-4 bg-green-50">
+              <h3 class="font-bold mb-2 text-green-700">Improved Essay</h3>
+
+              <div class="max-h-60 overflow-y-scroll whitespace-pre-line">
+                {{ improved_essay }}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- OTHER SECTIONS -->
+      <div id="documentsSection" class="hidden">
+        <h1 class="text-2xl font-bold mb-4">My Documents</h1>
+
+        {% if documents %} {% for doc in documents %}
+        <div
+          class="p-3 border rounded mb-2 bg-white flex justify-between items-center"
+        >
+          <div>
+            <p class="font-semibold text-gray-900">{{ doc[1] }}</p>
+            <p class="text-sm text-gray-500">Score: {{ doc[2] }}%</p>
+          </div>
+
+          <form action="/delete-document/{{ doc[0] }}" method="POST">
+            <button class="bg-red-500 text-white px-3 py-1 rounded">
+              Delete
+            </button>
+          </form>
+        </div>
+        {% endfor %}{% else %}
+        <p>No documents found</p>
+        {% endif %}
+      </div>
+
+      <div id="analyticsSection" class="hidden">
+        <h1 class="text-2xl font-bold mb-6">Analytics</h1>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="p-4 bg-white rounded shadow">
+            <p class="text-gray-500">Total Documents</p>
+            <p class="text-xl font-bold">{{ total_docs }}</p>
+          </div>
+
+          <div class="p-4 bg-white rounded shadow">
+            <p class="text-gray-500">Average Similarity</p>
+            <p class="text-xl font-bold">{{ avg_score }}%</p>
+          </div>
+
+          <div class="p-4 bg-white rounded shadow">
+            <p class="text-gray-500">Highest Similarity</p>
+            <p class="text-xl font-bold text-red-500">{{ max_score }}%</p>
+          </div>
+
+          <div class="p-4 bg-white rounded shadow">
+            <p class="text-gray-500">Lowest Similarity</p>
+            <p class="text-xl font-bold text-green-500">{{ min_score }}%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPEARANCE MODAL -->
+    <div
+      id="appearanceModal"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+    >
+      <div id="modalBox" class="bg-white p-6 rounded-xl w-80">
+        <h2 class="text-xl font-bold mb-4">Appearance</h2>
+
+        <button
+          onclick="setTheme('light')"
+          class="bg-gray-200 px-4 py-2 rounded w-full mb-2"
+        >
+          Light Mode
+        </button>
+
+        <button
+          onclick="setTheme('dark')"
+          class="bg-gray-800 text-white px-4 py-2 rounded w-full mb-4"
+        >
+          Dark Mode
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let activeTab = "similarity";
+      function showSection(section) {
+        document.getElementById("dashboardSection").style.display = "none";
+        document.getElementById("documentsSection").style.display = "none";
+        document.getElementById("analyticsSection").style.display = "none";
+
+        document.getElementById(section + "Section").style.display = "block";
+      }
+      function toggleSettings(e) {
+        e.stopPropagation();
+        document.getElementById("settingsMenu").classList.toggle("hidden");
+      }
+
+      document.addEventListener("click", () => {
+        document.getElementById("settingsMenu").classList.add("hidden");
+      });
+
+      function openHelp() {
+        window.location.href = "/help";
+      }
+
+      function openAppearance() {
+        document.getElementById("appearanceModal").classList.remove("hidden");
+      }
+
+      function closeAppearance() {
+        document.getElementById("appearanceModal").classList.add("hidden");
+      }
+
+      document
+        .getElementById("appearanceModal")
+        .addEventListener("click", function (e) {
+          if (e.target.id === "appearanceModal") {
+            closeAppearance();
+          }
+        });
+
+      function switchTab(tab) {
+        let similarity = document.getElementById("similaritySection");
+        let essay = document.getElementById("essaySection");
+
+        let tab1 = document.getElementById("tab1");
+        let tab2 = document.getElementById("tab2");
+
+        // 🔥 hide both sections completely
+        similarity.style.display = "none";
+        essay.style.display = "none";
+
+        // reset button colors
+        tab1.classList.remove("bg-blue-500", "text-white");
+        tab2.classList.remove("bg-blue-500", "text-white");
+
+        tab1.classList.add("bg-gray-200");
+        tab2.classList.add("bg-gray-200");
+
+        if (tab === "similarity") {
+          similarity.style.display = "block";
+          tab1.classList.add("bg-blue-500", "text-white");
+        } else {
+          essay.style.display = "block";
+          tab2.classList.add("bg-blue-500", "text-white");
+        }
+      }
+      function setTheme(mode) {
+        let body = document.getElementById("body");
+        let sidebar = document.getElementById("sidebar");
+        let settings = document.getElementById("settingsMenu");
+
+        if (mode === "dark") {
+          body.style.backgroundColor = "#111827";
+          body.style.color = "white";
+
+          sidebar.style.backgroundColor = "#1f2937";
+
+          let allText = sidebar.querySelectorAll("*");
+          allText.forEach((el) => {
+            el.style.color = "white";
+          });
+
+          // settings dropdown
+          if (settings) {
+            settings.style.backgroundColor = "#1f2937";
+            settings.style.color = "white";
+          }
+        } else {
+          body.style.backgroundColor = "#f9fafb";
+          body.style.color = "#111827";
+
+          sidebar.style.backgroundColor = "white";
+
+          // reset text
+          let allText = sidebar.querySelectorAll("*");
+          allText.forEach((el) => {
+            el.style.color = "";
+          });
+
+          if (settings) {
+            settings.style.backgroundColor = "white";
+            settings.style.color = "#111827";
+          }
+        }
+
+        localStorage.setItem("theme", mode);
+      }
+
+      function applyTheme(theme) {
+        if (theme === "dark") {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      }
+
+      let essayMode = "upload";
+
+      function switchEssayTab(mode) {
+        essayMode = mode;
+
+        let slider = document.getElementById("slider");
+        let upload = document.getElementById("essayUpload");
+        let text = document.getElementById("essayText");
+
+        if (mode === "upload") {
+          slider.style.left = "0%";
+          upload.classList.remove("hidden");
+          text.classList.add("hidden");
+        } else {
+          slider.style.left = "50%";
+          upload.classList.add("hidden");
+          text.classList.remove("hidden");
+        }
+      }
+
+      window.onload = function () {
+        let theme = localStorage.getItem("theme");
+        if (theme) {
+          setTheme(theme);
+        }
+
+        const section = "{{ active_section | default('dashboard') }}";
+        const tab = "{{ active_tab | default('similarity') }}";
+
+        showSection(section);
+        switchTab(tab);
+      };
+    </script>
+  </body>
+</html>

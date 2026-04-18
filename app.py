@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from authlib.integrations.flask_client import OAuth
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from google import genai
+import google.generativeai as genai
 try:
     from textblob import TextBlob
 except:
@@ -28,7 +28,7 @@ import difflib
 import sqlite3
 import os
 
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 app = Flask(__name__)
 app.secret_key = "secret@123"
@@ -467,9 +467,9 @@ def essay_evaluate():
 def get_ai_feedback(text):
     for i in range(3):   # try 3 times
         try:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=f"""
+            model = genai.GenerativeModel("gemini-1.5-flash")
+
+            response = model.generate_content(f"""
                 Analyze this essay and give:
                 - Grammar feedback
                 - Suggestions
@@ -497,7 +497,7 @@ Basic Feedback:
 def rewrite_essay(text):
     for i in range(3):   # try 3 times
         try:
-            response = client.models.generate_content(
+            response = genai.GenerativeModel("gemini-1.5-flash").generate_content(
                 model="gemini-2.5-flash",
                 contents=f"Rewrite this essay clearly:\n{text[:1500]}"
             )

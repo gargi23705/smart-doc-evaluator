@@ -469,7 +469,8 @@ def get_ai_feedback(text):
         try:
             model = genai.GenerativeModel("gemini-1.5-flash")
 
-            response = model.generate_content(f"""
+            response = model.generate_content(
+                f"""
                 Analyze this essay and give:
                 - Grammar feedback
                 - Suggestions
@@ -477,22 +478,19 @@ def get_ai_feedback(text):
 
                 Essay:
                 {text}
-                """
+                """,
+                request_options={"timeout": 10}
             )
+
             return response.text
 
         except Exception as e:
             print("Retrying AI feedback...", e)
-            time.sleep(2)   # wait 2 sec
+            time.sleep(2)
 
-    # 🔥 FINAL FALLBACK
-    return """AI is temporarily unavailable.
-Basic Feedback:
-- Improve grammar
-- Use better vocabulary
-- Avoid repetition
-- Strengthen conclusion
-"""
+    # FINAL fallback
+    return "AI feedback not available right now."
+
     
 def rewrite_essay(text):
     for i in range(3):   # try 3 times

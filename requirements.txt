@@ -6,3 +6,4 @@ nltk
 textblob
 requests
 python-dotenv
+Authlib

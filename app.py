@@ -485,14 +485,12 @@ def get_ai_feedback(text):
             Essay:
             {text}
             """,
-            request_options={"timeout": 10}
         )
-
         return response.text if response.text else "No response from AI"
 
     except Exception as e:
         print("GENAI ERROR:", e)
-        return "AI not working right now"
+        return f"AI Error: {str(e)}"
     
 def rewrite_essay(text):
     for i in range(3):   # try 3 times
